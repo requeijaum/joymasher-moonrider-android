@@ -1,0 +1,30 @@
+# --- Build artifacts / SDK / signing (never version) ---
+.android-sdk/
+build/
+obj/
+debug.keystore
+*.apk
+*.dex
+
+# --- Commercial game assets (JoyMasher / The Arcade Crew) — do NOT redistribute ---
+# Only OUR source is versioned (settings.js, options-menu.js, touch-controls.js,
+# index.html, src/, build.sh, res/, docs/). Everything below ships WITH the game
+# and must be supplied by whoever owns a legit copy.
+assets/www/media/
+assets/www/images/
+assets/www/*.mp4
+assets/www/*.ogg
+assets/www/*.png
+assets/www/*.jpg
+assets/www/*.csv
+assets/www/data.js
+assets/www/c2runtime.js
+assets/www/jquery-3.4.1.min.js
+assets/www/appmanifest.json
+assets/www/*.json
+
+# Keep OUR hand-written scripts even though they live in assets/www:
+!assets/www/settings.js
+!assets/www/options-menu.js
+!assets/www/touch-controls.js
+!assets/www/index.html
