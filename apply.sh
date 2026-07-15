@@ -67,11 +67,16 @@ echo "==> copiando assets do jogo para assets/www/ ..."
 # copia tudo do jogo (js, csv, png, mp4, media/, images/) preservando estrutura
 cp -a "$GAME_DIR/." "$WWW/"
 
-# remove sobras do build Electron/NW.js que nao servem no Android (opcional)
+# remove sobras do build Electron/NW.js/Steam que nao servem no Android (opcional)
 for junk in main.js preload.js offline.js offlineClient.js user.js config.js \
             greenworks.js greenworks-*.node package.json yarn.lock steam_appid.txt \
             sw.js testdemo.mp4; do
     rm -f "$WWW/$junk"
+done
+# diretorios de dependencias nativas/Steam (greenworks/, node_modules/, steam_settings/):
+# binarios .node de Windows/Linux/macOS que so incham o APK — o WebView nunca os usa.
+for junkdir in greenworks node_modules steam_settings resources; do
+    rm -rf "$WWW/$junkdir"
 done
 
 # --- 3. sobrepor os overrides do port -------------------------------------

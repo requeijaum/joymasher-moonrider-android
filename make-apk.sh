@@ -181,8 +181,13 @@ run_docker() {
     # Roda o helper de novo DENTRO do container, em modo baremetal: la o apt e o
     # bootstrap do SDK acontecem no ambiente isolado do container, escrevendo em
     # .android-sdk/ (bind-mount) para reuso posterior. Os assets entram read-only.
-    c_blue "==> buildando dentro do container ..."
+    # --user com o UID/GID do host: evita que build/, .android-sdk/ e debug.keystore
+    # saiam pertencendo a root (senao o host nao consegue limpar/rebuildar sem sudo).
+    # HOME=/tmp: gravavel por qualquer UID (sdkmanager escreve ~/.android).
+    c_blue "==> buildando dentro do container (como UID $(id -u):$(id -g)) ..."
     docker run --rm \
+        --user "$(id -u):$(id -g)" \
+        -e HOME=/tmp \
         -v "$HERE":/app \
         -v "$ASSETS_DIR":/assets:ro \
         -w /app \
