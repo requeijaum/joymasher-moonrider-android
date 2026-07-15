@@ -267,11 +267,16 @@ Prioridade sugerida: **1 → 2 → 3 → 4** (do mais barato/seguro ao mais ince
 
 ## Legal
 
+O código deste port está licenciado sob a **Apache License 2.0** — veja
+[`LICENSE.md`](LICENSE.md) e [`NOTICE`](NOTICE).
+
 Este repositório contém **apenas** o código do port (WebView wrapper + overlays
 JS/HTML), sob o autor. **Nenhum asset do jogo é incluído ou redistribuído** —
 `c2runtime.js`, `data.js`, áudio, sprites, CSVs e ícones do jogo são propriedade
 da **JoyMasher / The Arcade Crew** e devem ser fornecidos por quem possui uma
-cópia legítima (`apply.sh`). O `.gitignore` bloqueia todo esse material.
+cópia legítima (`apply.sh`). O `.gitignore` bloqueia todo esse material. A licença
+Apache 2.0 cobre **somente** o código autoral do port, não o jogo (ver `NOTICE`).
+Projeto não-oficial, sem afiliação com a JoyMasher / The Arcade Crew.
 
 ### Ícone do app
 

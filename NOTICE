@@ -1,0 +1,50 @@
+Moonrider Android — WebView port wrapper
+Copyright 2026 Rafael Requião
+
+This product is licensed under the Apache License, Version 2.0 (see LICENSE.md).
+
+================================================================================
+SCOPE OF THIS LICENSE
+================================================================================
+
+The Apache 2.0 license applies ONLY to the original port code authored in this
+repository, namely:
+
+  - The Android WebView wrapper (src/**, AndroidManifest.xml, build.sh)
+  - The live options overlay and touch controls
+      (assets/www/settings.js, options-menu.js, touch-controls.js,
+       and the modifications to index.html captured in dist/index.html.diff)
+  - The distribution tooling (apply.sh, dist/**), documentation (README.md,
+    docs/**) and build scripts.
+
+================================================================================
+THIRD-PARTY MATERIAL — NOT COVERED BY THIS LICENSE
+================================================================================
+
+This repository does NOT include, and this license does NOT grant any rights to,
+the game "Vengeful Guardian: Moonrider" or any of its assets, including but not
+limited to: c2runtime.js, data.js, the localization CSV files, audio (media/),
+sprites/images, the intro video, and any game artwork or icons.
+
+  "Vengeful Guardian: Moonrider" is © JoyMasher / The Arcade Crew.
+  All rights reserved by their respective owners.
+
+To build a working APK you must supply your own legitimate copy of the game's
+assets (see README.md and apply.sh). No commercial content is redistributed
+here — the repository ships only integrity hashes (dist/assets.sha256) so you
+can verify your own copy.
+
+The launcher icon shipped in this repository (docs/icon.png and
+res/mipmap-*/ic_launcher.png) is provided by the repository author for
+identification of the app build; if it derives from official game artwork,
+that artwork remains the property of JoyMasher / The Arcade Crew.
+
+This port is an unofficial, non-commercial personal-backup project and is not
+affiliated with, endorsed by, or sponsored by JoyMasher or The Arcade Crew.
+
+================================================================================
+BUNDLED THIRD-PARTY SOFTWARE
+================================================================================
+
+  jQuery 3.4.1 — © jQuery Foundation, MIT License
+  (supplied with the game assets, not versioned in this repository)
