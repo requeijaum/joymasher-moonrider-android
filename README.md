@@ -159,6 +159,61 @@ c2runtime) + `assets/www/options-menu.js` (UI). Abrir o menu pausa o jogo.
   usuário nunca fica preso. (O "Quit" do menu *do jogo* não funciona: chama uma
   API NW.js/Electron inexistente no WebView.)
 
+## Roadmap / To-dos
+
+Investigação técnica feita sobre `c2runtime.js` + `data.js` (event sheet) para
+avaliar viabilidade de cada item:
+
+### 1. i18n do menu custom (nosso overlay) — FÁCIL
+Hoje `options-menu.js` tem as strings em **PT hardcoded**. Plano:
+- Extrair as strings para um dicionário `MR_I18N[lang]` em `settings.js`.
+- Idiomas a cobrir (espelhar os 10 nativos do jogo): pt, en, ja, de, fr, es,
+  zh-Hans, zh-Hant, ko, it.
+- Escolher o idioma do menu pelo mesmo valor usado para o jogo (ver item 2),
+  com fallback para `en`.
+- Esforço: baixo. Risco: nenhum (só nosso código).
+
+### 2. Trocar o idioma interno do jogo — VIÁVEL (raiz identificada)
+**Causa:** o jogo não tem seletor próprio. Ele lê `navigator.language` (via a
+expressão C2 "Language") para uma variável `windowsLanguage` e compara o prefixo
+contra `pt/en/ja/de/fr/es/zh/ko/it`, carregando o CSV correspondente
+(`moonriderloc-mrlang{us,ptbr,jp,de,fr,es,chs,cht,kr,it}.csv`). No Android o
+`navigator.language` = locale do sistema, **sem como trocar dentro do jogo**.
+**Plano:** em `settings.js` (carregado ANTES do `c2runtime.js`), sobrescrever
+`navigator.language`/`navigator.languages` com o idioma salvo, e recarregar a
+página ao trocar (o idioma é lido só na inicialização). Adicionar uma linha
+"Idioma do jogo" no menu ⚙ com os 10 valores.
+- Esforço: médio (precisa reload + mapear código→prefixo). Risco: baixo — não
+  altera engine, só o valor lido no boot. **Validar:** cada CSV realmente carrega
+  ("CSV loaded successfully!" no logcat) e as fontes CJK renderizam no WebView.
+
+### 3. Submenu interno de gamepad / remap — INVESTIGAR
+O event sheet tem `remap` (37x) e `ConKB` (config de teclado) — ou seja, **o
+jogo já possui remapeamento**. Falta confirmar se o menu de controles abre e é
+navegável via gamepad físico no WebView (a Gamepad API entrega os eventos, mas o
+menu pode depender de input de teclado que o overlay/gamepad não sintetiza).
+**Plano:** abrir Options→Controls in-game com gamepad e observar; se não navegar,
+mapear os botões do gamepad para os keycodes que o menu espera (reusar a ponte de
+`touch-controls.js`). Se o remap nativo funcionar, documentar; senão, expor um
+remap simples no nosso overlay.
+- Esforço: médio/incerto até testar em device. Risco: médio.
+
+### 4. Cheats / hacks úteis — PARCIALMENTE VIÁVEL
+As variáveis globais do C2 são acessíveis via `c2runtime` no console/JS. Candidatos
+de baixo risco (dev/acessibilidade, opt-in e avisados):
+- **Vida infinita / no-damage**: localizar a variável de HP do player no event
+  sheet e forçá-la a cada tick (patch periódico via `settings.js`).
+- **Slow-mo / turbo**: já temos controle de FPS; um multiplicador de `dt` daria
+  slow-motion de acessibilidade.
+- **Level select / unlock**: se houver flag de progresso em `localStorage`.
+Estes dependem de mapear variáveis específicas no `data.js` (trabalhoso, nomes
+ofuscados). **Plano:** começar por slow-mo (já temos a base de tempo) e um toggle
+de invencibilidade se a var de HP for localizável. Marcar claramente como
+"cheats" e desligados por padrão.
+- Esforço: alto (engenharia reversa do event sheet). Risco: médio.
+
+Prioridade sugerida: **1 → 2 → 3 → 4** (do mais barato/seguro ao mais incerto).
+
 ## Legal
 
 Este repositório contém **apenas** o código do port (WebView wrapper + overlays
