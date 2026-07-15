@@ -1,31 +1,32 @@
 #!/usr/bin/env bash
 #
-# extract-assets.sh - Extrai os assets Construct 2 do jogo (Vengeful Guardian:
-#                     Moonrider) para uma pasta limpa, pronta para o apply.sh.
+# extract-assets.sh - Extract the Construct 2 game assets (Vengeful Guardian:
+#                     Moonrider) into a clean folder, ready for apply.sh.
 #
-# O jogo comercial (Steam/GOG) e um app Electron: os assets do Construct 2
-# (c2runtime.js, data.js, media/, images/, asteristic_logo.mp4) ficam DENTRO de
-# resources/app.asar. Este script localiza e extrai esse asar — ou aceita uma
-# pasta que ja tenha os assets soltos — e entrega tudo em um diretorio de saida.
+# The commercial game (Steam/GOG) is an Electron app: the Construct 2 assets
+# (c2runtime.js, data.js, media/, images/, asteristic_logo.mp4) live INSIDE
+# resources/app.asar. This script locates and extracts that asar — or accepts a
+# folder that already has the assets unpacked — and delivers everything to an
+# output directory.
 #
-# USO:
-#   ./extract-assets.sh <entrada> [pasta-de-saida]
+# USAGE:
+#   ./extract-assets.sh <input> [output-folder]
 #
-#   <entrada> pode ser:
-#     * um arquivo app.asar
-#     * a pasta de instalacao do jogo (contendo game/resources/app.asar,
-#       resources/app.asar, ou o proprio app.asar em algum nivel)
-#     * uma pasta que JA tem os assets extraidos (com c2runtime.js na raiz)
+#   <input> can be:
+#     * an app.asar file
+#     * the game install folder (containing game/resources/app.asar,
+#       resources/app.asar, or app.asar itself at some level)
+#     * a folder that ALREADY has the assets extracted (with c2runtime.js at its root)
 #
-#   [pasta-de-saida]  padrao: ./game-assets/
+#   [output-folder]  default: ./game-assets/
 #
-# Depois:
-#   ./apply.sh ./game-assets --build      # monta assets/www/ e builda o APK
-#   # ou, num passo so:
-#   ./extract-assets.sh <entrada> && ./apply.sh ./game-assets --build
+# Afterwards:
+#   ./apply.sh ./game-assets --build      # assemble assets/www/ and build the APK
+#   # or, in a single step:
+#   ./extract-assets.sh <input> && ./apply.sh ./game-assets --build
 #
-# NENHUM asset comercial e distribuido com este repositorio. Voce fornece sua
-# propria copia legitima do jogo.
+# NO commercial asset is distributed with this repository. You supply your own
+# legit copy of the game.
 #
 set -euo pipefail
 
@@ -33,21 +34,21 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 IN="${1:-}"
 OUT="${2:-$HERE/game-assets}"
 
-# Assets que provam que chegamos na raiz certa do Construct 2.
+# Assets that prove we reached the correct Construct 2 root.
 REQUIRED=(c2runtime.js data.js asteristic_logo.mp4)
-# Lixo Electron/NW.js/Steam que nao serve no Android (espelha o apply.sh).
+# Electron/NW.js/Steam junk that is useless on Android (mirrors apply.sh).
 JUNK_FILES=(main.js preload.js offline.js offlineClient.js user.js config.js
             greenworks.js package.json yarn.lock steam_appid.txt sw.js testdemo.mp4)
 JUNK_DIRS=(greenworks node_modules steam_settings)
 
-die()  { printf '\033[1;31mERRO:\033[0m %s\n' "$*" >&2; exit 1; }
+die()  { printf '\033[1;31mERROR:\033[0m %s\n' "$*" >&2; exit 1; }
 info() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 ok()   { printf '\033[1;32m    %s\033[0m\n' "$*"; }
 
-[ -n "$IN" ] || die "informe a entrada. Uso: ./extract-assets.sh <app.asar | pasta-do-jogo | pasta-extraida> [saida]"
-[ -e "$IN" ] || die "entrada nao encontrada: $IN"
+[ -n "$IN" ] || die "provide the input. Usage: ./extract-assets.sh <app.asar | game-folder | extracted-folder> [output]"
+[ -e "$IN" ] || die "input not found: $IN"
 
-# Confere se um diretorio tem os assets essenciais na raiz.
+# Check whether a directory has the essential assets at its root.
 has_assets() {
     local d="$1" f
     for f in "${REQUIRED[@]}"; do
@@ -56,7 +57,7 @@ has_assets() {
     return 0
 }
 
-# Localiza um app.asar a partir da entrada (arquivo direto ou pasta de instalacao).
+# Locate an app.asar from the input (direct file or install folder).
 find_asar() {
     local base="$1"
     if [ -f "$base" ] && [[ "$base" == *.asar ]]; then
@@ -70,14 +71,14 @@ find_asar() {
             "$base/app.asar"; do
             [ -f "$cand" ] && { printf '%s\n' "$cand"; return 0; }
         done
-        # busca em profundidade como ultimo recurso
+        # deep search as a last resort
         cand="$(find "$base" -maxdepth 5 -name app.asar -type f 2>/dev/null | head -1)"
         [ -n "$cand" ] && { printf '%s\n' "$cand"; return 0; }
     fi
     return 1
 }
 
-# Remove o lixo Electron/Steam de um diretorio de assets.
+# Remove the Electron/Steam junk from an assets directory.
 strip_junk() {
     local d="$1" j
     for j in "${JUNK_FILES[@]}"; do rm -f  "$d/$j"; done
@@ -86,69 +87,69 @@ strip_junk() {
 }
 
 # --------------------------------------------------------------------------
-# Caso A: a entrada JA e uma pasta com os assets extraidos.
+# Case A: the input is ALREADY a folder with the extracted assets.
 # --------------------------------------------------------------------------
 if [ -d "$IN" ] && has_assets "$IN"; then
-    info "entrada ja contem os assets extraidos (c2runtime.js encontrado)."
+    info "input already contains the extracted assets (c2runtime.js found)."
     SRC="$IN"
     COPY_MODE="dir"
 else
     # ----------------------------------------------------------------------
-    # Caso B: precisamos extrair de um app.asar.
+    # Case B: we need to extract from an app.asar.
     # ----------------------------------------------------------------------
-    info "procurando app.asar em: $IN"
-    ASAR="$(find_asar "$IN")" || die "nao achei app.asar nem assets soltos em '$IN'.
-       Aponte para a pasta de instalacao do jogo, para o app.asar, ou para uma
-       pasta ja extraida contendo c2runtime.js."
+    info "looking for app.asar in: $IN"
+    ASAR="$(find_asar "$IN")" || die "no app.asar nor loose assets found in '$IN'.
+       Point to the game install folder, to the app.asar, or to an already
+       extracted folder containing c2runtime.js."
     ok "app.asar: $ASAR"
 
-    command -v npx  >/dev/null 2>&1 || die "npx nao encontrado (instale Node.js >= 16: apt install nodejs npm)"
+    command -v npx  >/dev/null 2>&1 || die "npx not found (install Node.js >= 16: apt install nodejs npm)"
 
     TMP="$(mktemp -d)"
     trap 'rm -rf "$TMP"' EXIT
-    info "extraindo app.asar (npx asar) ... isso pode levar ~1 min"
-    # asar@3.2.0 funciona em Node 16-22; @electron/asar exige Node >= 22.12.
+    info "extracting app.asar (npx asar) ... this may take ~1 min"
+    # asar@3.2.0 works on Node 16-22; @electron/asar requires Node >= 22.12.
     npx --yes asar@3.2.0 extract "$ASAR" "$TMP/asar" \
         || npx --yes @electron/asar extract "$ASAR" "$TMP/asar" \
-        || die "falha ao extrair o asar (nem asar@3.2.0 nem @electron/asar funcionaram)"
+        || die "failed to extract the asar (neither asar@3.2.0 nor @electron/asar worked)"
 
-    # O Construct 2 costuma ficar na raiz do asar; se nao, procura a subpasta certa.
+    # Construct 2 is usually at the asar root; if not, find the right subfolder.
     if has_assets "$TMP/asar"; then
         SRC="$TMP/asar"
     else
         SUB="$(find "$TMP/asar" -maxdepth 4 -name c2runtime.js -type f 2>/dev/null | head -1)"
-        [ -n "$SUB" ] || die "asar extraido, mas c2runtime.js nao encontrado dentro dele."
+        [ -n "$SUB" ] || die "asar extracted, but c2runtime.js was not found inside it."
         SRC="$(dirname "$SUB")"
-        ok "assets C2 encontrados em: ${SRC#$TMP/asar/}"
+        ok "C2 assets found in: ${SRC#$TMP/asar/}"
     fi
     COPY_MODE="dir"
 fi
 
 # --------------------------------------------------------------------------
-# Copiar para a saida e limpar o lixo.
+# Copy to the output and clean the junk.
 # --------------------------------------------------------------------------
-has_assets "$SRC" || die "validacao final falhou: faltam assets essenciais em $SRC"
+has_assets "$SRC" || die "final validation failed: essential assets missing in $SRC"
 
-info "copiando assets para: $OUT"
+info "copying assets to: $OUT"
 mkdir -p "$OUT"
-# preserva estrutura (media/, images/, .csv, .mp4, .js)
+# preserve structure (media/, images/, .csv, .mp4, .js)
 cp -a "$SRC/." "$OUT/"
 
-info "removendo sobras Electron/NW.js/Steam (greenworks, node_modules, ...)"
+info "removing Electron/NW.js/Steam leftovers (greenworks, node_modules, ...)"
 strip_junk "$OUT"
 
-# Verificacao final + resumo
+# Final check + summary
 for f in "${REQUIRED[@]}"; do
-    [ -e "$OUT/$f" ] || die "pos-copia: asset essencial sumiu: $f"
+    [ -e "$OUT/$f" ] || die "post-copy: essential asset vanished: $f"
 done
-ok "assets essenciais: OK (c2runtime.js, data.js, asteristic_logo.mp4)"
-[ -d "$OUT/media" ]  && ok "media/:  presente" || echo "    AVISO: media/ ausente (audio pode faltar)"
-[ -d "$OUT/images" ] && ok "images/: presente" || echo "    AVISO: images/ ausente (sprites podem faltar)"
+ok "essential assets: OK (c2runtime.js, data.js, asteristic_logo.mp4)"
+[ -d "$OUT/media" ]  && ok "media/:  present" || echo "    WARNING: media/ missing (audio may be absent)"
+[ -d "$OUT/images" ] && ok "images/: present" || echo "    WARNING: images/ missing (sprites may be absent)"
 
 echo
-info "pronto. Assets limpos em: $OUT"
-echo "    Tamanho: $(du -sh "$OUT" 2>/dev/null | cut -f1)"
+info "done. Clean assets in: $OUT"
+echo "    Size: $(du -sh "$OUT" 2>/dev/null | cut -f1)"
 echo
-echo "Proximo passo:"
-echo "    ./apply.sh \"$OUT\" --build        # monta assets/www/ e builda o APK"
-echo "    ./make-apk.sh --mode docker \"$OUT\"  # build isolado em container Debian"
+echo "Next step:"
+echo "    ./apply.sh \"$OUT\" --build        # assemble assets/www/ and build the APK"
+echo "    ./make-apk.sh --mode docker \"$OUT\"  # isolated build in a Debian container"

@@ -1,26 +1,26 @@
 #!/usr/bin/env bash
 #
-# make-apk.sh - Helper interativo para buildar o APK do Moonrider Android.
+# make-apk.sh - Interactive helper to build the Moonrider Android APK.
 #
-# Oferece dois caminhos:
-#   * docker    - tudo dentro de um container Debian; nao instala nada no host
-#                 (alem do proprio Docker). Reutiliza .android-sdk/ e os assets
+# Offers two paths:
+#   * docker    - everything inside a Debian container; installs nothing on the
+#                 host (beyond Docker itself). Reuses .android-sdk/ and the assets
 #                 via bind-mount.
-#   * baremetal - instala as dependencias (JDK + utilitarios) no sistema via
-#                 apt e builda direto no host.
+#   * baremetal - installs the dependencies (JDK + utilities) on the system via
+#                 apt and builds directly on the host.
 #
-# Nos dois casos, se .android-sdk/ ainda nao estiver populado, o script faz o
-# bootstrap (cmdline-tools -> platform-tools, platforms;android-34,
-# build-tools;34.0.0) automaticamente.
+# In both cases, if .android-sdk/ is not populated yet, the script bootstraps it
+# (cmdline-tools -> platform-tools, platforms;android-34, build-tools;34.0.0)
+# automatically.
 #
-# USO:
-#   ./make-apk.sh                         # modo interativo (pergunta tudo)
+# USAGE:
+#   ./make-apk.sh                         # interactive mode (asks everything)
 #   ./make-apk.sh --mode docker    <assets-dir>
 #   ./make-apk.sh --mode baremetal <assets-dir>
 #   ./make-apk.sh --help
 #
-# NENHUM asset comercial e distribuido aqui: <assets-dir> e a SUA copia legitima
-# do jogo (pasta com c2runtime.js, data.js, asteristic_logo.mp4, media/, ...).
+# NO commercial asset is distributed here: <assets-dir> is YOUR legit copy of the
+# game (folder with c2runtime.js, data.js, asteristic_logo.mp4, media/, ...).
 #
 set -euo pipefail
 
@@ -28,14 +28,14 @@ HERE="$(cd "$(dirname "$0")" && pwd)"
 SDK="$HERE/.android-sdk"
 IMAGE="moonrider-build"
 
-# Componentes exigidos pelo build.sh (mantenha em sincronia com ele).
+# Components required by build.sh (keep in sync with it).
 CMDLINE_TOOLS_URL="https://dl.google.com/android/repository/commandlinetools-linux-11076708_latest.zip"
 SDK_PACKAGES=("platform-tools" "platforms;android-34" "build-tools;34.0.0")
 
 c_blue()  { printf '\033[1;34m%s\033[0m\n' "$*"; }
 c_green() { printf '\033[1;32m%s\033[0m\n' "$*"; }
 c_yellow(){ printf '\033[1;33m%s\033[0m\n' "$*"; }
-die()     { printf '\033[1;31mERRO:\033[0m %s\n' "$*" >&2; exit 1; }
+die()     { printf '\033[1;31mERROR:\033[0m %s\n' "$*" >&2; exit 1; }
 
 usage() {
     sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//'
@@ -43,7 +43,7 @@ usage() {
 }
 
 # --------------------------------------------------------------------------
-# Parse de argumentos
+# Argument parsing
 # --------------------------------------------------------------------------
 MODE=""
 ASSETS_DIR=""
@@ -52,65 +52,65 @@ while [ $# -gt 0 ]; do
         --mode)  MODE="${2:-}"; shift 2 ;;
         --mode=*) MODE="${1#*=}"; shift ;;
         -h|--help) usage 0 ;;
-        --*) die "opcao desconhecida: $1 (use --help)" ;;
-        *)   [ -z "$ASSETS_DIR" ] && ASSETS_DIR="$1" || die "argumento extra: $1"; shift ;;
+        --*) die "unknown option: $1 (use --help)" ;;
+        *)   [ -z "$ASSETS_DIR" ] && ASSETS_DIR="$1" || die "extra argument: $1"; shift ;;
     esac
 done
 
 # --------------------------------------------------------------------------
-# Modo interativo (se nao veio por flag)
+# Interactive mode (if not provided via flag)
 # --------------------------------------------------------------------------
 if [ -z "$MODE" ]; then
-    c_blue "Como voce quer buildar o APK?"
-    echo "  1) docker    - tudo num container Debian, nada instalado no host"
-    echo "  2) baremetal - instala JDK + deps no sistema (apt) e builda direto"
-    printf "Escolha [1/2]: "
+    c_blue "How do you want to build the APK?"
+    echo "  1) docker    - everything in a Debian container, nothing installed on the host"
+    echo "  2) baremetal - installs JDK + deps on the system (apt) and builds directly"
+    printf "Choose [1/2]: "
     read -r choice
     case "$choice" in
         1) MODE="docker" ;;
         2) MODE="baremetal" ;;
-        *) die "escolha invalida" ;;
+        *) die "invalid choice" ;;
     esac
 fi
 
-case "$MODE" in docker|baremetal) ;; *) die "modo invalido: '$MODE' (use docker ou baremetal)";; esac
+case "$MODE" in docker|baremetal) ;; *) die "invalid mode: '$MODE' (use docker or baremetal)";; esac
 
 # --------------------------------------------------------------------------
-# Pasta de assets do jogo
+# Game assets folder
 # --------------------------------------------------------------------------
 if [ -z "$ASSETS_DIR" ]; then
-    c_blue "Onde estao os assets do jogo (pasta com c2runtime.js, data.js, asteristic_logo.mp4)?"
-    printf "Caminho: "
+    c_blue "Where are the game assets (folder with c2runtime.js, data.js, asteristic_logo.mp4)?"
+    printf "Path: "
     read -r ASSETS_DIR
 fi
 ASSETS_DIR="${ASSETS_DIR/#\~/$HOME}"
-[ -n "$ASSETS_DIR" ] || die "voce precisa informar a pasta de assets do jogo"
-[ -d "$ASSETS_DIR" ] || die "pasta de assets nao encontrada: $ASSETS_DIR"
+[ -n "$ASSETS_DIR" ] || die "you must provide the game assets folder"
+[ -d "$ASSETS_DIR" ] || die "assets folder not found: $ASSETS_DIR"
 for f in c2runtime.js data.js asteristic_logo.mp4; do
-    [ -e "$ASSETS_DIR/$f" ] || die "asset essencial ausente em '$ASSETS_DIR': $f (essa nao parece a pasta do jogo)"
+    [ -e "$ASSETS_DIR/$f" ] || die "essential asset missing in '$ASSETS_DIR': $f (this doesn't look like the game folder)"
 done
-ASSETS_DIR="$(cd "$ASSETS_DIR" && pwd)"   # normaliza para caminho absoluto
-c_green "Assets do jogo: $ASSETS_DIR"
+ASSETS_DIR="$(cd "$ASSETS_DIR" && pwd)"   # normalize to absolute path
+c_green "Game assets: $ASSETS_DIR"
 
 # ==========================================================================
-# Funcoes compartilhadas
+# Shared functions
 # ==========================================================================
 
-# Bootstrap do Android SDK dentro de $SDK. Idempotente: so baixa o que falta.
-# Roda tanto no host (baremetal) quanto dentro do container (docker), por isso
-# so depende de: curl, unzip, e um JDK (para o sdkmanager).
+# Bootstrap the Android SDK into $SDK. Idempotent: only downloads what's missing.
+# Runs both on the host (baremetal) and inside the container (docker), so it only
+# depends on: curl, unzip, and a JDK (for sdkmanager).
 bootstrap_sdk() {
     local bt="$SDK/build-tools/34.0.0/aapt2"
     local plat="$SDK/platforms/android-34/android.jar"
     if [ -f "$bt" ] && [ -f "$plat" ]; then
-        c_green "SDK ja presente em .android-sdk/ (build-tools 34.0.0 + platform 34)."
+        c_green "SDK already present in .android-sdk/ (build-tools 34.0.0 + platform 34)."
         return 0
     fi
 
-    c_yellow "SDK incompleto - fazendo bootstrap em .android-sdk/ ..."
+    c_yellow "SDK incomplete - bootstrapping into .android-sdk/ ..."
     local sdkmgr="$SDK/cmdline-tools/latest/bin/sdkmanager"
     if [ ! -x "$sdkmgr" ]; then
-        c_blue "==> baixando cmdline-tools ..."
+        c_blue "==> downloading cmdline-tools ..."
         mkdir -p "$SDK/cmdline-tools"
         local tmp; tmp="$(mktemp -d)"
         curl -fL -o "$tmp/cmdline-tools.zip" "$CMDLINE_TOOLS_URL"
@@ -120,22 +120,22 @@ bootstrap_sdk() {
         rm -rf "$tmp"
     fi
 
-    c_blue "==> aceitando licencas e instalando pacotes do SDK ..."
+    c_blue "==> accepting licenses and installing SDK packages ..."
     yes | "$sdkmgr" --sdk_root="$SDK" --licenses >/dev/null 2>&1 || true
     "$sdkmgr" --sdk_root="$SDK" "${SDK_PACKAGES[@]}"
 
-    [ -f "$bt" ]   || die "bootstrap falhou: aapt2 nao encontrado apos instalar build-tools"
-    [ -f "$plat" ] || die "bootstrap falhou: android.jar nao encontrado apos instalar a platform"
-    c_green "SDK pronto."
+    [ -f "$bt" ]   || die "bootstrap failed: aapt2 not found after installing build-tools"
+    [ -f "$plat" ] || die "bootstrap failed: android.jar not found after installing the platform"
+    c_green "SDK ready."
 }
 
 # ==========================================================================
-# MODO BAREMETAL
+# BAREMETAL MODE
 # ==========================================================================
 run_baremetal() {
-    c_blue "=== Modo baremetal ==="
+    c_blue "=== Baremetal mode ==="
 
-    # 1. dependencias de sistema
+    # 1. system dependencies
     local need=()
     command -v javac    >/dev/null 2>&1 || need+=("openjdk-21-jdk-headless")
     command -v zip      >/dev/null 2>&1 || need+=("zip")
@@ -145,46 +145,46 @@ run_baremetal() {
 
     if [ ${#need[@]} -gt 0 ]; then
         if command -v apt-get >/dev/null 2>&1; then
-            c_yellow "Instalando dependencias via apt: ${need[*]}"
+            c_yellow "Installing dependencies via apt: ${need[*]}"
             local SUDO=""; [ "$(id -u)" -ne 0 ] && SUDO="sudo"
             $SUDO apt-get update
             $SUDO apt-get install -y --no-install-recommends "${need[@]}"
         else
-            die "faltam dependencias (${need[*]}) e este host nao usa apt. Instale-as manualmente."
+            die "missing dependencies (${need[*]}) and this host doesn't use apt. Install them manually."
         fi
     else
-        c_green "Dependencias de sistema ja presentes (JDK, zip, unzip, curl)."
+        c_green "System dependencies already present (JDK, zip, unzip, curl)."
     fi
 
-    command -v javac >/dev/null 2>&1 || die "javac ainda ausente apos a instalacao"
+    command -v javac >/dev/null 2>&1 || die "javac still missing after installation"
 
     # 2. SDK
     bootstrap_sdk
 
     # 3. build
-    c_blue "==> montando assets e buildando (apply.sh --build) ..."
+    c_blue "==> assembling assets and building (apply.sh --build) ..."
     "$HERE/apply.sh" "$ASSETS_DIR" --build
 }
 
 # ==========================================================================
-# MODO DOCKER
+# DOCKER MODE
 # ==========================================================================
 run_docker() {
-    c_blue "=== Modo docker ==="
-    command -v docker >/dev/null 2>&1 || die "docker nao encontrado no host"
-    docker info >/dev/null 2>&1 || die "o daemon do Docker nao esta acessivel (permissao? 'sudo usermod -aG docker \$USER' ou rode com sudo)"
-    [ -f "$HERE/Dockerfile.build" ] || die "Dockerfile.build nao encontrado no repo"
+    c_blue "=== Docker mode ==="
+    command -v docker >/dev/null 2>&1 || die "docker not found on the host"
+    docker info >/dev/null 2>&1 || die "the Docker daemon is not reachable (permissions? 'sudo usermod -aG docker \$USER' or run with sudo)"
+    [ -f "$HERE/Dockerfile.build" ] || die "Dockerfile.build not found in the repo"
 
-    c_blue "==> construindo a imagem '$IMAGE' ..."
+    c_blue "==> building the '$IMAGE' image ..."
     docker build -f "$HERE/Dockerfile.build" -t "$IMAGE" "$HERE"
 
-    # Roda o helper de novo DENTRO do container, em modo baremetal: la o apt e o
-    # bootstrap do SDK acontecem no ambiente isolado do container, escrevendo em
-    # .android-sdk/ (bind-mount) para reuso posterior. Os assets entram read-only.
-    # --user com o UID/GID do host: evita que build/, .android-sdk/ e debug.keystore
-    # saiam pertencendo a root (senao o host nao consegue limpar/rebuildar sem sudo).
-    # HOME=/tmp: gravavel por qualquer UID (sdkmanager escreve ~/.android).
-    c_blue "==> buildando dentro do container (como UID $(id -u):$(id -g)) ..."
+    # Run the helper again INSIDE the container, in baremetal mode: there the apt and
+    # SDK bootstrap happen in the container's isolated environment, writing into
+    # .android-sdk/ (bind-mount) for later reuse. The assets come in read-only.
+    # --user with the host UID/GID: prevents build/, .android-sdk/ and debug.keystore
+    # from ending up owned by root (otherwise the host can't clean/rebuild without sudo).
+    # HOME=/tmp: writable by any UID (sdkmanager writes ~/.android).
+    c_blue "==> building inside the container (as UID $(id -u):$(id -g)) ..."
     docker run --rm \
         --user "$(id -u):$(id -g)" \
         -e HOME=/tmp \
@@ -204,11 +204,11 @@ esac
 APK="$HERE/build/Moonrider-debug.apk"
 if [ -f "$APK" ]; then
     echo
-    c_green "APK gerado: $APK"
+    c_green "APK generated: $APK"
     ls -lh "$APK"
     echo
-    echo "Instalar no dispositivo (USB debugging ligado):"
+    echo "Install on the device (USB debugging enabled):"
     echo "  ${SDK}/platform-tools/adb install -r \"$APK\""
 else
-    die "o build terminou mas o APK nao foi encontrado em $APK"
+    die "the build finished but the APK was not found at $APK"
 fi
