@@ -10,6 +10,9 @@ debug.keystore
 # Only OUR source is versioned (settings.js, options-menu.js, touch-controls.js,
 # index.html, src/, build.sh, res/, docs/). Everything below ships WITH the game
 # and must be supplied by whoever owns a legit copy.
+
+# Pasta de saida do extract-assets.sh (assets do jogo extraidos do app.asar):
+game-assets/
 assets/www/media/
 assets/www/images/
 assets/www/*.mp4
