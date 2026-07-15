@@ -55,6 +55,34 @@ Z=90  X=88  S=83  A=65  C=67  Y=89   Enter=13 (confirmar menu)
   keycodes — sem tocar no engine. Layout: D-pad à esquerda, botões A/B/X/Y à
   direita, START/SEL no topo.
 
+## Distribuir como patch (sem assets comerciais)
+
+Este repositório versiona **apenas o código do port** — nenhum asset do jogo. A
+engine (`c2runtime.js`) e os dados (`data.js`) são **idênticos ao original**, então
+o "patch" se resume a 4 arquivos web + o wrapper Android. Quem tiver uma cópia
+legítima do jogo monta o projeto com um comando:
+
+```bash
+./apply.sh /caminho/para/os/assets/do/jogo --build
+# -> copia os assets do jogo, sobrepõe os overrides do port e gera o APK
+```
+
+A "pasta de assets do jogo" é onde ficam `c2runtime.js`, `data.js`, `media/`,
+`images/`, os `.csv` e `asteristic_logo.mp4` — extraída do `app.asar`
+(Steam/GOG) ou do build HTML5 original.
+
+O que o port sobrepõe (em `dist/www-overrides/`):
+
+| Arquivo | Original? | O que muda |
+|---|---|---|
+| `index.html` | modificado | viewport fullscreen, injeta os scripts do port, desabilita service worker; ver `dist/index.html.diff` |
+| `settings.js` | **novo** | patches ao vivo (FPS cap, escala, áudio, CRT, brilho) |
+| `options-menu.js` | **novo** | painel de opções ⚙ |
+| `touch-controls.js` | **novo** | overlay touch |
+
+`dist/index.html.diff` é o diff unificado contra o `index.html` original, para
+auditoria/reaplicação manual.
+
 ## Build
 
 Não usa Gradle (build manual enxuto). Requer o SDK local em `.android-sdk/`
@@ -103,8 +131,8 @@ Botão de engrenagem no canto superior direito abre um painel que aplica tudo
 
 | Opção | Efeito |
 |-------|--------|
-| Trava de FPS | 30 / 60 / 90 / 120 / Sem trava — gate por-callback no requestAnimationFrame (medido: cap 30→30fps, 60→60fps) |
-| Escala | Off / Auto / 50 / 100 / 200 / 300 / 400 / 500% da resolução nativa 428×240 (pixels perfeitos; medido: 100%→428px, 200%→856px, 500%→2140px) |
+| Trava de FPS | 30 / 60 / 90 / 120 / Sem trava **+ botão `…` para valor custom (10–240)** — gate por-callback no requestAnimationFrame (medido: cap 30→30fps, 60→60fps) |
+| Escala | Off / Auto / 50 / 100 / 200 / 300 / 400 / 500% **+ botão `…` para % custom (25–1000)** da resolução nativa 428×240 (pixels perfeitos; medido: 100%→428px, 200%→856px, 500%→2140px) |
 | Suavização de pixels | nearest (nítido) vs linear |
 | Volume | 0–100% (GainNode master no WebAudio) |
 | Áudio | Estéreo / Mono (downmix real via channel merger) |
@@ -118,3 +146,29 @@ Botão de engrenagem no canto superior direito abre um painel que aplica tudo
 
 Arquivos: `assets/www/settings.js` (patches de API, carregado ANTES do
 c2runtime) + `assets/www/options-menu.js` (UI). Abrir o menu pausa o jogo.
+
+> Valores custom: as linhas **Trava de FPS** e **Escala** têm um botão `…` que
+> abre um campo numérico inline — digite qualquer valor (Enter confirma, Esc
+> cancela). O chip fica destacado mostrando o valor custom ativo.
+
+## Sair do app
+
+- **Botão "Sair do jogo"** no menu ⚙ (confirmação de dois toques) → `Activity.finish()` via bridge nativo.
+- **Voltar (Back) duplo**: um toque em Voltar mostra um aviso; um segundo toque
+  em até 2s fecha o app. Válvula de segurança caso o menu/bridge falhe — o
+  usuário nunca fica preso. (O "Quit" do menu *do jogo* não funciona: chama uma
+  API NW.js/Electron inexistente no WebView.)
+
+## Legal
+
+Este repositório contém **apenas** o código do port (WebView wrapper + overlays
+JS/HTML), sob o autor. **Nenhum asset do jogo é incluído ou redistribuído** —
+`c2runtime.js`, `data.js`, áudio, sprites, CSVs e ícones do jogo são propriedade
+da **JoyMasher / The Arcade Crew** e devem ser fornecidos por quem possui uma
+cópia legítima (`apply.sh`). O `.gitignore` bloqueia todo esse material.
+
+### Ícone do app
+
+O ícone do launcher (`res/mipmap-*/ic_launcher.png`) é placeholder. Para trocar,
+substitua os PNGs nas 5 densidades (mdpi 48px, hdpi 72, xhdpi 96, xxhdpi 144,
+xxxhdpi 192) e rebuilde. Se usar arte oficial do jogo, mantenha-a fora do git.

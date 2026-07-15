@@ -42,7 +42,9 @@ public class MainActivity extends Activity {
         s.setAllowFileAccess(true);
         s.setAllowContentAccess(true);
         s.setAllowFileAccessFromFileURLs(true);
-        s.setAllowUniversalAccessFromFileURLs(true);
+        // Universal file access is intentionally NOT enabled: the game is fully
+        // offline and served from file:///android_asset. Leaving it off shrinks
+        // the attack surface of the JS bridge (window.MRAndroid).
         s.setMediaPlaybackRequiresUserGesture(false);  // let intro audio autoplay
         s.setCacheMode(WebSettings.LOAD_NO_CACHE);
         s.setDefaultTextEncodingName("utf-8");
@@ -93,11 +95,25 @@ public class MainActivity extends Activity {
         applyImmersive();
     }
 
-    /** Let the in-game Back mapping / menu handle Back before leaving. */
+    /**
+     * Back handling: the game manages its own in-menu navigation, so a single
+     * Back is swallowed. But double-tapping Back within 2s exits the app — a
+     * safety valve so the user is never trapped if the JS "Quit" button or the
+     * options overlay ever fails to load.
+     */
+    private long lastBackPress = 0L;
+
     @Override
     public boolean onKeyDown(int keyCode, KeyEvent event) {
         if (keyCode == KeyEvent.KEYCODE_BACK && webView != null) {
-            // Do not exit immediately; the game handles navigation itself.
+            long now = System.currentTimeMillis();
+            if (now - lastBackPress < 2000L) {
+                finish();
+                return true;
+            }
+            lastBackPress = now;
+            android.widget.Toast.makeText(this,
+                "Pressione Voltar novamente para sair", android.widget.Toast.LENGTH_SHORT).show();
             return true;
         }
         return super.onKeyDown(keyCode, event);
