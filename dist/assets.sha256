@@ -1,0 +1,33 @@
+# Moonrider - manifesto de integridade dos assets do jogo (SHA-256)
+#
+# Verifica que a pasta de assets fornecida corresponde ao conteudo esperado
+# antes de montar/buildar o APK. NENHUM asset comercial e distribuido aqui:
+# apenas os hashes, para que quem tem uma copia legitima confirme a integridade.
+#
+# Uso (dentro da pasta de assets do jogo):
+#   sha256sum -c assets.sha256
+#
+# Pastas grandes verificadas por hash AGREGADO (nao por sha256sum -c):
+#   media/  (287 arquivos .ogg)  aggregate: a737afecbf6c388b09ab1cac7be124348befeade3211f3e45c4e1dacb5701919
+#   images/ (1260 arquivos)      aggregate: 359ceb439184ae644d30464f0f6332266cef1deae3188d1f9c580cca0e40e5fc
+#   (agregado = `find <dir> -type f | sort | xargs sha256sum | sha256sum`)
+#
+b16cf331880009cc50e5f4e3c2d4a84eb0319a99bc953d705caa228010a191d8  appmanifest.json
+236da9e60b4cc381fafeffad4c2624da80d581842798c54e93385d1be735f231  asteristic_logo.mp4
+2a8e03490b66c6ece48e97fe3ab85fb4fae6171d6d691834e0d64d5d409e8d7b  c2runtime.js
+7bc7e1d4c2fa81d4314fd43f88c25a5d25823dcb5f99178365937e7c6bb35d22  data.js
+0925e8ad7bd971391a8b1e98be8e87a6971919eb5b60c196485941c3c1df089a  jquery-3.4.1.min.js
+b82c7714b421bce5a8de4adc26d3dbd864811aa358b32fe06620832a39112891  credits.csv
+560cb5b79bd5a79bd8a6580d9e555b8670977aa9e82e7c2c308e839b318c08eb  enemypoints.csv
+4016859d1f010dc2d58a5fb8c20aa5e9eedf95ad186e5572e6e9c8187eec8ae3  moonriderloc-mrlangchs.csv
+4bd5d655e068f2e3d377890bc0348635b1ade1e6c46ce977ea912a9153b293e0  moonriderloc-mrlangcht.csv
+13888b118660a362806a1870d67a736796511aac617645ddef9279b4780110b1  moonriderloc-mrlangde.csv
+c6f83cb52f47e84ebef40794a7f287517592b77c87fd09ff555ae7ca7674fe29  moonriderloc-mrlanges.csv
+c1a0c82e8ca974345f650ddea798f29d25c8cd5ef5d96f265286a1f4e852f191  moonriderloc-mrlangfr.csv
+08e4b12bd6ff0379ed0ab8dccfe0802b4b7d28630e0008229250bfecc3a86f09  moonriderloc-mrlangit.csv
+4b0aa1492ceb6fc3815bc63e77560e4fd59622ad202135b58d9eea10750d4736  moonriderloc-mrlangjp.csv
+b82056f44eb2876db96853013ce1b24908d46e3a7d1dd487fe775e142694a5ff  moonriderloc-mrlangkr.csv
+7391ab535c4522d6179f12b5fa952039de004643bad27977de104baec66ffb08  moonriderloc-mrlangptbr.csv
+21f304ffc7336a00eceaf6ed16c1f168e3440f4a4bad9ad406fe93ea1df98e8a  moonriderloc-mrlangus.csv
+7b8437320922c8b0b2d9b60b301f324e29da25de4de6fc348e12473265131b3c  playerdamagevalues.csv
+9c8ff7fccbff3322e6852e6a07163d1c8f0c1481f849623831e1ae84ab4c56b6  stagetimes.csv

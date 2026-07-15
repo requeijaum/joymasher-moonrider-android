@@ -30,9 +30,8 @@ Verificado no `c2runtime.js`: greenworks/Steam/require são condicionais a
 
 ## 2. O que foi feito
 
-1. **Assets**: reaproveitados de
-   `moonrider-native-c-proto/assets/original-rar/app` (já extraído do RAR;
-   283 ogg + 1260 imagens). Não foi preciso reprocessar o RAR de 433MB.
+1. **Assets**: reaproveitados da cópia local dos assets do jogo (build
+   Construct 2/HTML5): 283 ogg + 1260 imagens.
    Copiados só os arquivos web (139M); Electron/greenworks/node_modules/.mp4
    omitidos.
 2. **Toolchain**: instalado SDK enxuto em `.android-sdk/` (cmdline-tools +

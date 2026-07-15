@@ -1,5 +1,5 @@
---- /home/rafaelfrequiao/projects/portsmaster_on_rg40xxh/moonrider-native-c-proto/assets/original-rar/app/index.html	2026-07-14 09:38:02.863843647 -0300
-+++ assets/www/index.html	2026-07-14 21:04:10.722886445 -0300
+--- a/index.html (original)
++++ b/index.html (port)
 @@ -2,135 +2,124 @@
  <html>
  <head>
