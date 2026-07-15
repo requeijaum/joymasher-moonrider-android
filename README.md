@@ -147,7 +147,7 @@ completo, não uma demo.
 
 `dist/assets.sha256` guarda os hashes SHA-256 dos arquivos essenciais do jogo
 (engine, dados, CSVs de idioma, intro) mais os hashes agregados das pastas
-`media/` (287 .ogg) e `images/` (1260 arquivos). Serve para confirmar que a sua
+`media/` (287 arquivos de áudio: 283 .ogg + 4 .m4a) e `images/` (1260 arquivos). Serve para confirmar que a sua
 cópia de assets está íntegra e é a mesma esperada por este port, sem redistribuir
 nenhum conteúdo comercial. O `apply.sh` roda essa verificação automaticamente
 (aviso não-fatal se divergir). Manual:

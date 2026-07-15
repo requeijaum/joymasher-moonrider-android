@@ -8,7 +8,7 @@
 #   sha256sum -c assets.sha256
 #
 # Pastas grandes verificadas por hash AGREGADO (nao por sha256sum -c):
-#   media/  (287 arquivos .ogg)  aggregate: a737afecbf6c388b09ab1cac7be124348befeade3211f3e45c4e1dacb5701919
+#   media/  (287 arquivos de audio: 283 .ogg + 4 .m4a)  aggregate: a737afecbf6c388b09ab1cac7be124348befeade3211f3e45c4e1dacb5701919
 #   images/ (1260 arquivos)      aggregate: 359ceb439184ae644d30464f0f6332266cef1deae3188d1f9c580cca0e40e5fc
 #   (agregado = `find <dir> -type f | sort | xargs sha256sum | sha256sum`)
 #
