@@ -75,7 +75,8 @@ for junk in main.js preload.js offline.js offlineClient.js user.js config.js \
 done
 # diretorios de dependencias nativas/Steam (greenworks/, node_modules/, steam_settings/):
 # binarios .node de Windows/Linux/macOS que so incham o APK — o WebView nunca os usa.
-for junkdir in greenworks node_modules steam_settings resources; do
+# (mantido em sincronia com JUNK_DIRS do extract-assets.sh)
+for junkdir in greenworks node_modules steam_settings; do
     rm -rf "$WWW/$junkdir"
 done
 
