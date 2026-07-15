@@ -291,7 +291,16 @@ invincibility toggle if the HP variable is locatable. Clearly mark them as
 "cheats" and off by default.
 - Effort: high (event-sheet reverse engineering). Risk: medium.
 
-Suggested priority: **1 → 2 → 3 → 4** (from cheapest/safest to most uncertain).
+### 5. Touch overlay: visual + haptic feedback on press — MISSING
+The on-screen touch buttons currently fire the keycodes correctly but give no
+press feedback: no visual state change (pressed/highlight) and no haptic pulse
+when a button is touched. Plan: add an `:active`/pressed style (opacity/scale/glow)
+on `touchstart` and reset on `touchend` in `touch-controls.js`, and trigger a
+short `navigator.vibrate()` pulse gated by the existing "Vibration" toggle in the
+⚙ menu. Effort: low. Risk: none (our code only).
+
+Suggested priority: **1 → 2 → 3 → 5 → 4** (from cheapest/safest to most uncertain;
+item 5 is a quick UX win).
 
 ## Legal
 
