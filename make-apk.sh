@@ -38,7 +38,7 @@ c_yellow(){ printf '\033[1;33m%s\033[0m\n' "$*"; }
 die()     { printf '\033[1;31mERROR:\033[0m %s\n' "$*" >&2; exit 1; }
 
 usage() {
-    sed -n '2,30p' "$0" | sed 's/^# \{0,1\}//'
+    sed -n '2,23p' "$0" | sed 's/^# \{0,1\}//'
     exit "${1:-0}"
 }
 
