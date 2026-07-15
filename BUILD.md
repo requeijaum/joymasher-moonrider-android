@@ -91,6 +91,21 @@ What it does:
 
 The output folder is exactly what `apply.sh` / `make-apk.sh` expect.
 
+### 2.3 Note: `testdemo.mp4` — 208 MB of dead weight
+
+The game ships a `testdemo.mp4` that is **208 MB — the single largest file in the
+whole game**. It is referenced *only* in `offline.js` (the Construct 2 Service
+Worker cache manifest) and is never played by any game logic — it's absent from
+`data.js`, `c2runtime.js`, and any `<video>`/`<script>`. It looks like a leftover
+dev/test capture that JoyMasher accidentally packed into the retail Steam/GOG
+build. The only video the game actually uses is `asteristic_logo.mp4` (3.8 MB,
+the mandatory studio intro).
+
+`extract-assets.sh` and `apply.sh` both strip `testdemo.mp4`. The port's
+`index.html` doesn't load the Service Worker anyway (assets are served from
+`file:///android_asset`), so the manifest is irrelevant on Android. Dropping this
+file (plus the Electron/Steam junk) is why the APK is ~130 MB instead of ~338 MB.
+
 ---
 
 ## 3. Quick build with make-apk.sh
