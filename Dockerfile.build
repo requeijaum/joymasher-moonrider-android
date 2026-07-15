@@ -1,0 +1,14 @@
+# Container Debian para buildar o APK do Moonrider sem instalar nada no host.
+# Base Debian (trixie) + JDK headless + utilitarios que os scripts chamam.
+# O .android-sdk/ e os assets do jogo entram por bind-mount em tempo de execucao
+# (nunca sao copiados para a imagem). Veja BUILD.md secao 5 / make-apk.sh.
+FROM debian:trixie-slim
+
+RUN apt-get update && \
+    apt-get install -y --no-install-recommends \
+        default-jdk-headless \
+        zip unzip curl ca-certificates \
+        findutils coreutils && \
+    rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app

@@ -15,9 +15,14 @@ your own copy of the game (see below).
 
 ## Requirements
 
-- Android 5.0+ (minSdk 21, targetSdk 34)
+- Android 5.0+ (minSdk 21, targetSdk 34) on the target device
 - A legitimate copy of the game's assets
-- Local Android SDK in `.android-sdk/` (cmdline-tools, platform 34, build-tools 34)
+- To build: a Linux host (tested on Debian 13; Ubuntu works the same), a JDK
+  17+, and a local Android SDK in `.android-sdk/` (cmdline-tools, platform 34,
+  build-tools 34.0.0)
+
+The build uses the raw SDK build-tools directly — **no Gradle, no Android
+Studio**. There's also a Docker path if you'd rather not install a toolchain.
 
 ## Build
 
@@ -30,6 +35,10 @@ your own copy of the game (see below).
 `apply.sh` copies your game assets into `assets/www/`, applies the port's
 overrides, and (with `--build`) produces the APK. It also verifies the assets
 against `dist/assets.sha256` and warns on mismatch.
+
+**First time?** You need to bootstrap the SDK into `.android-sdk/` and install a
+JDK first. Full instructions — host packages, SDK setup, the build pipeline,
+Docker, and troubleshooting — are in [`BUILD.md`](BUILD.md).
 
 The "game assets folder" is the one holding `c2runtime.js`, `data.js`, `media/`,
 `images/`, the `.csv` files and `asteristic_logo.mp4`.
