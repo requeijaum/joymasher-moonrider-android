@@ -72,6 +72,14 @@ The game ships on Steam (AppID 1942010) and GOG as a native Windows build, but
 underneath it's the same Construct 2 app this port wraps — which is why serving
 those assets in a WebView works. Ten languages, released 12 Jan 2023.
 
+These assets match the **launch build** (Steam BuildID 10293244, 12 Jan 2023),
+not the only patch that followed (BuildID 10710596, 28 Mar 2023). Confirmed by
+three markers the patch would have changed: `steam_appid.txt` is still present
+(the patch removed it), there's no `CRT.ini` (the patch added it), and the boss
+tracks the patch introduced (submarine / serpent / brain-jar) are absent. The
+patch was mostly bug fixes, balancing and a Windows-only CRT rework, so little of
+it affects this port.
+
 `dist/assets.sha256` lets you verify your copy is intact without redistributing
 anything:
 
