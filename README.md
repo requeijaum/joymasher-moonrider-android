@@ -1,5 +1,9 @@
 # Moonrider Android
 
+<p align="center">
+  <img src="docs/icon.png" alt="Ícone do app Moonrider Android" width="128" height="128">
+</p>
+
 Porte Android de **Vengeful Guardian: Moonrider** (jogo Construct 2/HTML5) para
 um APK universal via WebView nativo. Empacota o mesmo app Construct 2 usado no
 porte muOS/PortMaster (`../portsmaster_on_rg40xxh/`), mas no Android **toda a
@@ -271,6 +275,8 @@ cópia legítima (`apply.sh`). O `.gitignore` bloqueia todo esse material.
 
 ### Ícone do app
 
-O ícone do launcher (`res/mipmap-*/ic_launcher.png`) é placeholder. Para trocar,
+O ícone do launcher (`res/mipmap-*/ic_launcher.png`, veja `docs/icon.png`) é a
+arte custom do Moonrider, gerada nas 5 densidades a partir de um PNG 256×256. Para
+trocar,
 substitua os PNGs nas 5 densidades (mdpi 48px, hdpi 72, xhdpi 96, xxhdpi 144,
 xxxhdpi 192) e rebuilde. Se usar arte oficial do jogo, mantenha-a fora do git.
