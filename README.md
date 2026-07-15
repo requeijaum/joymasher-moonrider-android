@@ -1,287 +1,315 @@
 # Moonrider Android
 
 <p align="center">
-  <img src="docs/icon.png" alt="Ícone do app Moonrider Android" width="128" height="128">
+  <img src="docs/icon.png" alt="Moonrider Android app icon" width="128" height="128">
+  <br>
+  <em>All rights reserved to JoyMasher, The Arcade Crew and Asteristic Game Studio.</em>
 </p>
 
-Porte Android de **Vengeful Guardian: Moonrider** (jogo Construct 2/HTML5) para
-um APK universal via WebView nativo. Empacota o mesmo app Construct 2 usado no
-porte muOS/PortMaster (`../portsmaster_on_rg40xxh/`), mas no Android **toda a
-infraestrutura de contorno do muOS desaparece**: sem WPE WebKit, sem backend
-Mali-fbdev, sem audio-ghost, sem mixer miniaudio nativo, sem bridge evdev.
+Android port of **Vengeful Guardian: Moonrider** (a Construct 2 / HTML5 game) as
+a universal APK running in a native WebView. It wraps the same Construct 2 app
+used in the muOS/PortMaster port (`../portsmaster_on_rg40xxh/`), but on Android
+**all of the muOS workaround infrastructure disappears**: no WPE WebKit, no
+Mali-fbdev backend, no audio-ghost, no native miniaudio mixer, no evdev bridge.
 
-O WebView (Chromium do sistema, atualizável a partir do Android 5.0) resolve
-nativamente os três problemas-raiz que consumiram o porte muOS:
+The WebView (system Chromium, updatable from Android 5.0 onward) natively solves
+the three root problems that consumed the muOS port:
 
-| Problema no muOS | Solução no Android |
+| Problem on muOS | Solution on Android |
 |---|---|
-| decode de `.ogg` travava o WebProcess | WebView toca `<audio>`/WebAudio nativo |
-| present/frame_complete quebrado (3 FPS) | SurfaceFlinger + compositor Chromium |
-| input via evdev + latch anti-borda | Gamepad API nativa do Chromium |
+| `.ogg` decode stalled the WebProcess | WebView plays native `<audio>`/WebAudio |
+| broken present/frame_complete (3 FPS) | SurfaceFlinger + Chromium compositor |
+| input via evdev + anti-edge latch | Chromium's native Gamepad API |
 
-## Alvo
+## Target
 
-- **APK universal**: detecta gamepad físico (handheld Android, controle BT) e,
-  quando não há, mostra um overlay touch on-screen.
+- **Universal APK**: detects a physical gamepad (Android handheld, BT controller)
+  and, when there is none, shows an on-screen touch overlay.
 - **minSdk 21 (Android 5.0)**, targetSdk 34.
-- Orientação landscape, immersive fullscreen, tela sempre acesa.
+- Landscape orientation, immersive fullscreen, screen kept awake.
 
-## Arquitetura
+## Architecture
 
 ```
-assets/www/               <- app Construct 2 (mesmo do porte muOS)
-  index.html              <- adaptado: sem alert file://, viewport fullscreen,
-                             injeta touch-controls.js, SW desabilitado
-  touch-controls.js       <- overlay touch -> dispara os keycodes NATIVOS do jogo
-  c2runtime.js, data.js   <- runtime + event sheet originais (intocados)
+assets/www/               <- Construct 2 app (same as the muOS port)
+  index.html              <- adapted: no file:// alert, fullscreen viewport,
+                             injects touch-controls.js, SW disabled
+  touch-controls.js       <- touch overlay -> fires the game's NATIVE keycodes
+  c2runtime.js, data.js   <- original runtime + event sheet (untouched)
   jquery-3.4.1.min.js
-  media/*.ogg (283)       <- áudio
+  media/ (287 audio)      <- 283 .ogg + 4 .m4a
   images/ (1260)          <- sprites
-src/.../MainActivity.java  <- WebView fullscreen, hardware-accel, immersive
-src/.../LoggingChromeClient.java <- console JS -> logcat
-AndroidManifest.xml        <- minSdk21, landscape, gamepad opcional
-build.sh                   <- build manual (aapt2+javac+d8+zipalign+apksigner)
+src/.../MainActivity.java  <- fullscreen WebView, hardware-accel, immersive
+src/.../LoggingChromeClient.java <- JS console -> logcat
+AndroidManifest.xml        <- minSdk21, landscape, gamepad optional
+build.sh                   <- manual build (aapt2+javac+d8+zipalign+apksigner)
 ```
 
-### Controles
+### Controls
 
-O jogo já suporta teclado nativamente. Mapa default (de `data.js`
+The game already supports the keyboard natively. Default mapping (from `data.js`
 `varConKB_DEFAULT`/`_MENU`):
 
 ```
 ↑=38  ↓=40  ←=37  →=39
-Z=90  X=88  S=83  A=65  C=67  Y=89   Enter=13 (confirmar menu)
+Z=90  X=88  S=83  A=65  C=67  Y=89   Enter=13 (confirm menu)
 ```
 
-- **Gamepad físico**: lido direto pela Gamepad API do C2 (`navigator.getGamepads`).
-  O overlay touch some automaticamente quando um gamepad conecta.
-- **Touch**: `touch-controls.js` sintetiza `keydown`/`keyup` reais desses
-  keycodes — sem tocar no engine. Layout: D-pad à esquerda, botões A/B/X/Y à
-  direita, START/SEL no topo.
+- **Physical gamepad**: read directly by C2's Gamepad API
+  (`navigator.getGamepads`). The touch overlay disappears automatically when a
+  gamepad connects.
+- **Touch**: `touch-controls.js` synthesizes real `keydown`/`keyup` for those
+  keycodes — without touching the engine. Layout: D-pad on the left, A/B/X/Y
+  buttons on the right, START/SEL at the top.
 
-## Distribuir como patch (sem assets comerciais)
+## Distribute as a patch (no commercial assets)
 
-Este repositório versiona **apenas o código do port** — nenhum asset do jogo. A
-engine (`c2runtime.js`) e os dados (`data.js`) são **idênticos ao original**, então
-o "patch" se resume a 4 arquivos web + o wrapper Android. Quem tiver uma cópia
-legítima do jogo monta o projeto com um comando:
+This repository versions **only the port code** — no game assets. The engine
+(`c2runtime.js`) and data (`data.js`) are **identical to the original**, so the
+"patch" boils down to 4 web files + the Android wrapper. Anyone with a legitimate
+copy of the game assembles the project with a single command:
 
 ```bash
-./apply.sh /caminho/para/os/assets/do/jogo --build
-# -> copia os assets do jogo, sobrepõe os overrides do port e gera o APK
+./apply.sh /path/to/the/game/assets --build
+# -> copies the game assets, overlays the port overrides and builds the APK
 ```
 
-A "pasta de assets do jogo" é onde ficam `c2runtime.js`, `data.js`, `media/`,
-`images/`, os `.csv` e `asteristic_logo.mp4` — extraída do `app.asar`
-(Steam/GOG) ou do build HTML5 original.
+The "game assets folder" is where `c2runtime.js`, `data.js`, `media/`, `images/`,
+the `.csv` files and `asteristic_logo.mp4` live — extracted from your own
+legitimate copy of the game (Construct 2 / HTML5).
 
-O que o port sobrepõe (em `dist/www-overrides/`):
+What the port overlays (in `dist/www-overrides/`):
 
-| Arquivo | Original? | O que muda |
+| File | Original? | What changes |
 |---|---|---|
-| `index.html` | modificado | viewport fullscreen, injeta os scripts do port, desabilita service worker; ver `dist/index.html.diff` |
-| `settings.js` | **novo** | patches ao vivo (FPS cap, escala, áudio, CRT, brilho) |
-| `options-menu.js` | **novo** | painel de opções ⚙ |
-| `touch-controls.js` | **novo** | overlay touch |
+| `index.html` | modified | fullscreen viewport, injects the port scripts, disables the service worker; see `dist/index.html.diff` |
+| `settings.js` | **new** | live patches (FPS cap, scale, audio, CRT, brightness) |
+| `options-menu.js` | **new** | ⚙ options panel |
+| `touch-controls.js` | **new** | touch overlay |
 
-`dist/index.html.diff` é o diff unificado contra o `index.html` original, para
-auditoria/reaplicação manual.
+`dist/index.html.diff` is the unified diff against the original `index.html`, for
+auditing / manual reapplication.
+
+### Asset integrity (SHA-256)
+
+`dist/assets.sha256` holds the SHA-256 hashes of the essential game files
+(engine, data, language CSVs, intro) plus aggregate hashes of the `media/`
+(287 audio files: 283 .ogg + 4 .m4a) and `images/` (1260 files) folders. It lets
+you confirm your asset copy is intact and matches what this port expects, without
+redistributing any commercial content. `apply.sh` runs this check automatically
+(non-fatal warning on mismatch). Manual:
+
+```bash
+cd /path/to/the/game/assets
+sha256sum -c /path/to/dist/assets.sha256
+```
 
 ## Build
 
-Não usa Gradle (build manual enxuto). Requer o SDK local em `.android-sdk/`
-(cmdline-tools + platform android-34 + build-tools 34.0.0), já instalado.
+No Gradle (lean manual build). Requires the local SDK in `.android-sdk/`
+(cmdline-tools + platform android-34 + build-tools 34.0.0), already installed.
 
 ```bash
 ./build.sh
 # -> build/Moonrider-debug.apk
 ```
 
-## Instalar / testar
+## Install / test
 
 ```bash
 adb install -r build/Moonrider-debug.apk
-adb logcat -s MoonriderJS   # ver console JS do jogo
+adb logcat -s MoonriderJS   # see the game's JS console
 ```
 
-## Notas
+## Notes
 
-- Os assets são propriedade da JoyMasher/The Arcade Crew; **não versionar** o
-  conteúdo de `assets/www/media` e `assets/www/images` publicamente.
-- Saves usam `localStorage` (origin `file://`), persistente entre execuções.
-- Ficheiros Electron/Steam (greenworks, main.js, node_modules, .mp4) foram
-  deliberadamente omitidos: o código Steam no `c2runtime.js` é condicional a
-  `runtime.isNWjs` (false num WebView), então nunca executa.
-- APK ~127M por causa dos assets. Para reduzir: recomprimir `.ogg`/sprites.
+- The assets are the property of JoyMasher / The Arcade Crew; **do not version**
+  the contents of `assets/www/media` and `assets/www/images` publicly.
+- Saves use `localStorage` (origin `file://`), persistent across runs.
+- Electron/Steam files (greenworks, main.js, node_modules, .mp4) were
+  deliberately omitted: the Steam code in `c2runtime.js` is gated on
+  `runtime.isNWjs` (false in a WebView), so it never executes.
+- APK ~127M because of the assets. To shrink: recompress `.ogg`/sprites.
 
-## Versões oficiais vs. os assets locais
+## API version & compatibility
 
-Verificação nas lojas oficiais (jul/2026) comparada aos assets Construct 2/HTML5
-usados por este port (a sua cópia local do jogo):
+| Field | Value |
+|---|---|
+| **minSdkVersion** | **21** (Android 5.0 Lollipop) |
+| **targetSdkVersion** | **34** (Android 14) |
+| **compileSdkVersion** | 34 |
+| versionCode / versionName | 1 / "1.0" |
+| Package | `com.joymasher.moonrider` |
 
-| | Steam | GOG | Assets locais (este port) |
+**Coverage:** Android **5.0 through 14+** — effectively 100% of Android devices in
+use today. minSdk 21 is possible because the Chromium WebView became a
+Play-Store-updatable component from Android 5.0, so even an old device gets a
+modern WebView with WebGL, WebAudio and the Gamepad API — exactly the three
+features the game needs.
+
+Declared features are all optional (`required=false`), so the app is not
+Play-Store-filtered by hardware: `android.hardware.gamepad`,
+`android.hardware.touchscreen`, `android.hardware.usb.host`,
+`android.hardware.screen.landscape`. Validated on a real device only on Android 13
+(POCO X3 Pro / vayu); the minSdk 21 floor is declared and installs but was not
+tested on Android 5–6 hardware.
+
+## Official versions vs. the local assets
+
+Official-store check (Jul 2026) compared to the Construct 2/HTML5 assets used by
+this port (your local copy of the game):
+
+| | Steam | GOG | Local assets (this port) |
 |---|---|---|---|
 | AppID / SKU | 1942010 | vengeful_guardian_moonrider | — |
 | Release | 12 Jan 2023 | 12 Jan 2023 | — |
-| Dev / Pub | JoyMasher / The Arcade Crew | idem | idem (package.json) |
-| Idiomas | **10** (EN, FR, IT, DE, ES, +5) | **10** ("English & 9 more") | **10** CSVs `mrlang*` ✓ |
-| Plataforma | Win nativo | Win nativo (DRM-free) | **HTML5/Construct 2** (NW.js) |
-| Achievements | 13 (Steam) | — (GOG Galaxy) | presentes no event sheet |
-| Versão | não exposta publicamente¹ | não exposta | `package.json` = 1.0.0² |
+| Dev / Pub | JoyMasher / The Arcade Crew | same | same (package.json) |
+| Languages | **10** (EN, FR, IT, DE, ES, +5) | **10** ("English & 9 more") | **10** `mrlang*` CSVs ✓ |
+| Platform | Native Win | Native Win (DRM-free) | **HTML5/Construct 2** (NW.js) |
+| Achievements | 13 (Steam) | — (GOG Galaxy) | present in the event sheet |
+| Version | not publicly exposed¹ | not exposed | `package.json` = 1.0.0² |
 
-¹ SteamDB (patchnotes/buildid) está bloqueado por bot-detection; não deu para
-  extrair o changelist exato sem login.
-² `1.0.0` é o valor genérico do wrapper NW.js, **não** reflete patch do jogo. Não
-  há número de versão do *jogo* embutido nos assets (Construct 2 não grava build
-  id no `c2runtime.js`/`data.js`). O `1.4.x` que aparece num grep é versão de
-  dependências npm (fs-extra etc.), não do jogo.
+¹ SteamDB (patchnotes/buildid) is blocked by bot-detection; couldn't extract the
+  exact changelist without logging in.
+² `1.0.0` is the generic NW.js wrapper value, it does **not** reflect the game
+  patch. There is no *game* version number embedded in the assets (Construct 2
+  does not write a build id into `c2runtime.js`/`data.js`). The `1.4.x` that shows
+  up in a grep is an npm dependency version (fs-extra etc.), not the game.
 
-**Conclusão da comparação:** os assets locais são do **mesmo jogo** das lojas
-oficiais — mesma data, mesmos 10 idiomas, mesmo dev/pub — na forma do **build web
-Construct 2 (NW.js/Electron)** em vez do executável Windows nativo das lojas. Por
-baixo, Steam/GOG rodam o mesmo `c2runtime.js` + `data.js`; a diferença é só o
-runtime que os embrulha (NW.js aqui vs. o wrapper nativo das lojas). É por isso
-que este port WebView funciona: ele descarta o wrapper NW.js/Steam e serve os
-mesmos assets Construct 2 no WebView do Android. **Não foi possível confirmar se
-os assets correspondem ao patch *mais recente*** das lojas (sem acesso a buildid),
-mas o conteúdo (10 locales, event sheet com achievements/remap) é o do lançamento
-completo, não uma demo.
+**Comparison conclusion:** the local assets are the **same game** as the official
+stores — same date, same 10 languages, same dev/pub — in the form of the
+**Construct 2 (NW.js/Electron) web build** instead of the stores' native Windows
+executable. Underneath, Steam/GOG run the same `c2runtime.js` + `data.js`; the
+only difference is the runtime wrapping them (NW.js here vs. the stores' native
+wrapper). That is why this WebView port works: it discards the NW.js/Steam
+wrapper and serves the same Construct 2 assets in Android's WebView. **It was not
+possible to confirm whether the assets correspond to the *latest* store patch**
+(no buildid access), but the content (10 locales, event sheet with
+achievements/remap) is the full release, not a demo.
 
-### Integridade dos assets (SHA-256)
+## Validated on a real device
 
-`dist/assets.sha256` guarda os hashes SHA-256 dos arquivos essenciais do jogo
-(engine, dados, CSVs de idioma, intro) mais os hashes agregados das pastas
-`media/` (287 arquivos de áudio: 283 .ogg + 4 .m4a) e `images/` (1260 arquivos). Serve para confirmar que a sua
-cópia de assets está íntegra e é a mesma esperada por este port, sem redistribuir
-nenhum conteúdo comercial. O `apply.sh` roda essa verificação automaticamente
-(aviso não-fatal se divergir). Manual:
+✅ **Validated on a real device** (POCO X3 Pro / vayu, LineageOS, Android 13):
+title screen renders (WebGL/Adreno), audio plays (AAudio player USAGE_MEDIA
+started), full touch overlay with the 4 shoulders (L1/L2 top-left, R1/R2
+top-right). See `docs/RELATORIO-SESSAO-20260714.md`.
 
-```bash
-cd /caminho/para/os/assets/do/jogo
-sha256sum -c /caminho/para/dist/assets.sha256
-```
+### Critical pitfall: the intro video is MANDATORY
+The game opens with the `asteristic_logo.mp4` video (C2 Video plugin). If it is
+missing, the app stays on a **black, silent screen** — C2 waits for the video to
+finish before advancing to the menu, and it is the first user-gesture/media that
+unlocks the WebView's audio context. **Always copy `asteristic_logo.mp4` (3.9MB)**
+into `assets/www/`. The `testdemo.mp4` (217MB, attract/demo) is optional.
 
-## Pendente (validação em device real)
+## Live options menu (⚙)
 
-✅ **Validado em device real** (POCO X3 Pro / vayu, LineageOS, Android 13):
-tela de título renderiza (WebGL/Adreno), áudio toca (AAudio player USAGE_MEDIA
-started), overlay touch completo com os 4 shoulders (L1/L2 topo-esq, R1/R2
-topo-dir). Ver `docs/RELATORIO-SESSAO-20260714.md`.
+A gear button in the top-right corner opens a panel that applies everything
+**live** (JavaScript) and saves to `localStorage`:
 
-### Pitfall crítico: vídeo de intro é OBRIGATÓRIO
-O jogo abre com o vídeo `asteristic_logo.mp4` (plugin Video do C2). Se ele
-faltar, o app fica em **tela preta e sem som** — o C2 espera o vídeo terminar
-antes de avançar ao menu, e é o primeiro user-gesture/mídia que destrava o
-contexto de áudio do WebView. **Sempre copiar `asteristic_logo.mp4` (3.9MB)**
-para `assets/www/`. O `testdemo.mp4` (217MB, attract/demo) é opcional.
-
-## Menu de opções ao vivo (⚙)
-
-Botão de engrenagem no canto superior direito abre um painel que aplica tudo
-**ao vivo** (JavaScript) e salva em `localStorage`:
-
-| Opção | Efeito |
+| Option | Effect |
 |-------|--------|
-| Trava de FPS | 30 / 60 / 90 / 120 / Sem trava **+ botão `…` para valor custom (10–240)** — gate por-callback no requestAnimationFrame (medido: cap 30→30fps, 60→60fps) |
-| Escala | Off / Auto / 50 / 100 / 200 / 300 / 400 / 500% **+ botão `…` para % custom (25–1000)** da resolução nativa 428×240 (pixels perfeitos; medido: 100%→428px, 200%→856px, 500%→2140px) |
-| Suavização de pixels | nearest (nítido) vs linear |
-| Volume | 0–100% (GainNode master no WebAudio) |
-| Áudio | Estéreo / Mono (downmix real via channel merger) |
-| Mostrar FPS | Contador no topo |
-| Filtro CRT | Scanlines retrô |
-| Brilho | 50–150% |
-| Vibração | Haptics nos botões touch |
-| Manter tela acesa | Bridge nativo FLAG_KEEP_SCREEN_ON |
-| Forçar overlay touch | Botões visíveis mesmo com gamepad |
-| **Sair do jogo** | Fecha o app (Activity.finish) via bridge nativo — o "Quit" do menu do jogo chama uma API NW.js/Electron inexistente no WebView e não funciona |
+| FPS cap | 30 / 60 / 90 / 120 / Uncapped **+ `…` button for a custom value (10–240)** — per-callback gate on requestAnimationFrame (measured: cap 30→30fps, 60→60fps) |
+| Scale | Off / Auto / 50 / 100 / 200 / 300 / 400 / 500% **+ `…` button for a custom % (25–1000)** of the native 428×240 resolution (pixel-perfect; measured: 100%→428px, 200%→856px, 500%→2140px) |
+| Pixel smoothing | nearest (sharp) vs linear |
+| Volume | 0–100% (master GainNode on WebAudio) |
+| Audio | Stereo / Mono (real downmix via channel merger) |
+| Show FPS | Counter at the top |
+| CRT filter | Retro scanlines |
+| Brightness | 50–150% |
+| Vibration | Haptics on the touch buttons |
+| Keep screen awake | Native bridge FLAG_KEEP_SCREEN_ON |
+| Force touch overlay | Buttons visible even with a gamepad |
+| **Quit game** | Closes the app (Activity.finish) via the native bridge — the game menu's "Quit" calls an NW.js/Electron API that doesn't exist in a WebView and does nothing |
 
-Arquivos: `assets/www/settings.js` (patches de API, carregado ANTES do
-c2runtime) + `assets/www/options-menu.js` (UI). Abrir o menu pausa o jogo.
+Files: `assets/www/settings.js` (API patches, loaded BEFORE c2runtime) +
+`assets/www/options-menu.js` (UI). Opening the menu pauses the game.
 
-> Valores custom: as linhas **Trava de FPS** e **Escala** têm um botão `…` que
-> abre um campo numérico inline — digite qualquer valor (Enter confirma, Esc
-> cancela). O chip fica destacado mostrando o valor custom ativo.
+> Custom values: the **FPS cap** and **Scale** rows have a `…` button that opens
+> an inline number field — type any value (Enter confirms, Esc cancels). The chip
+> stays highlighted showing the active custom value.
 
-## Sair do app
+## Exiting the app
 
-- **Botão "Sair do jogo"** no menu ⚙ (confirmação de dois toques) → `Activity.finish()` via bridge nativo.
-- **Voltar (Back) duplo**: um toque em Voltar mostra um aviso; um segundo toque
-  em até 2s fecha o app. Válvula de segurança caso o menu/bridge falhe — o
-  usuário nunca fica preso. (O "Quit" do menu *do jogo* não funciona: chama uma
-  API NW.js/Electron inexistente no WebView.)
+- **"Quit game" button** in the ⚙ menu (two-tap confirmation) → `Activity.finish()`
+  via the native bridge.
+- **Double Back**: one Back tap shows a hint; a second tap within 2s closes the
+  app. A safety valve in case the menu/bridge fails — the user never gets stuck.
+  (The *game* menu's "Quit" does not work: it calls a nonexistent NW.js/Electron
+  API in the WebView.)
 
 ## Roadmap / To-dos
 
-Investigação técnica feita sobre `c2runtime.js` + `data.js` (event sheet) para
-avaliar viabilidade de cada item:
+Technical investigation done on `c2runtime.js` + `data.js` (event sheet) to assess
+the feasibility of each item:
 
-### 1. i18n do menu custom (nosso overlay) — FÁCIL
-Hoje `options-menu.js` tem as strings em **PT hardcoded**. Plano:
-- Extrair as strings para um dicionário `MR_I18N[lang]` em `settings.js`.
-- Idiomas a cobrir (espelhar os 10 nativos do jogo): pt, en, ja, de, fr, es,
+### 1. i18n for the custom menu (our overlay) — EASY
+Today `options-menu.js` has its strings **hardcoded in PT**. Plan:
+- Extract the strings into a `MR_I18N[lang]` dictionary in `settings.js`.
+- Languages to cover (mirror the game's 10 native ones): pt, en, ja, de, fr, es,
   zh-Hans, zh-Hant, ko, it.
-- Escolher o idioma do menu pelo mesmo valor usado para o jogo (ver item 2),
-  com fallback para `en`.
-- Esforço: baixo. Risco: nenhum (só nosso código).
+- Pick the menu language from the same value used for the game (see item 2), with
+  a fallback to `en`.
+- Effort: low. Risk: none (our code only).
 
-### 2. Trocar o idioma interno do jogo — VIÁVEL (raiz identificada)
-**Causa:** o jogo não tem seletor próprio. Ele lê `navigator.language` (via a
-expressão C2 "Language") para uma variável `windowsLanguage` e compara o prefixo
-contra `pt/en/ja/de/fr/es/zh/ko/it`, carregando o CSV correspondente
-(`moonriderloc-mrlang{us,ptbr,jp,de,fr,es,chs,cht,kr,it}.csv`). No Android o
-`navigator.language` = locale do sistema, **sem como trocar dentro do jogo**.
-**Plano:** em `settings.js` (carregado ANTES do `c2runtime.js`), sobrescrever
-`navigator.language`/`navigator.languages` com o idioma salvo, e recarregar a
-página ao trocar (o idioma é lido só na inicialização). Adicionar uma linha
-"Idioma do jogo" no menu ⚙ com os 10 valores.
-- Esforço: médio (precisa reload + mapear código→prefixo). Risco: baixo — não
-  altera engine, só o valor lido no boot. **Validar:** cada CSV realmente carrega
-  ("CSV loaded successfully!" no logcat) e as fontes CJK renderizam no WebView.
+### 2. Switch the game's internal language — VIABLE (root cause identified)
+**Cause:** the game has no selector of its own. It reads `navigator.language` (via
+the C2 "Language" expression) into a `windowsLanguage` variable and compares the
+prefix against `pt/en/ja/de/fr/es/zh/ko/it`, loading the matching CSV
+(`moonriderloc-mrlang{us,ptbr,jp,de,fr,es,chs,cht,kr,it}.csv`). On Android
+`navigator.language` = the system locale, **with no way to change it in-game**.
+**Plan:** in `settings.js` (loaded BEFORE `c2runtime.js`), override
+`navigator.language`/`navigator.languages` with the saved language, and reload the
+page on change (the language is only read at startup). Add a "Game language" row
+to the ⚙ menu with the 10 values.
+- Effort: medium (needs reload + code→prefix mapping). Risk: low — it doesn't
+  alter the engine, only the value read at boot. **Validate:** each CSV actually
+  loads ("CSV loaded successfully!" in logcat) and the CJK fonts render in the
+  WebView.
 
-### 3. Submenu interno de gamepad / remap — INVESTIGAR
-O event sheet tem `remap` (37x) e `ConKB` (config de teclado) — ou seja, **o
-jogo já possui remapeamento**. Falta confirmar se o menu de controles abre e é
-navegável via gamepad físico no WebView (a Gamepad API entrega os eventos, mas o
-menu pode depender de input de teclado que o overlay/gamepad não sintetiza).
-**Plano:** abrir Options→Controls in-game com gamepad e observar; se não navegar,
-mapear os botões do gamepad para os keycodes que o menu espera (reusar a ponte de
-`touch-controls.js`). Se o remap nativo funcionar, documentar; senão, expor um
-remap simples no nosso overlay.
-- Esforço: médio/incerto até testar em device. Risco: médio.
+### 3. Internal gamepad submenu / remap — INVESTIGATE
+The event sheet has `remap` (37x) and `ConKB` (keyboard config) — i.e. **the game
+already has remapping**. It remains to confirm whether the controls menu opens and
+is navigable via a physical gamepad in the WebView (the Gamepad API delivers the
+events, but the menu may depend on keyboard input the overlay/gamepad doesn't
+synthesize). **Plan:** open Options→Controls in-game with a gamepad and observe;
+if it doesn't navigate, map the gamepad buttons to the keycodes the menu expects
+(reuse the `touch-controls.js` bridge). If the native remap works, document it;
+otherwise expose a simple remap in our overlay.
+- Effort: medium/uncertain until tested on a device. Risk: medium.
 
-### 4. Cheats / hacks úteis — PARCIALMENTE VIÁVEL
-As variáveis globais do C2 são acessíveis via `c2runtime` no console/JS. Candidatos
-de baixo risco (dev/acessibilidade, opt-in e avisados):
-- **Vida infinita / no-damage**: localizar a variável de HP do player no event
-  sheet e forçá-la a cada tick (patch periódico via `settings.js`).
-- **Slow-mo / turbo**: já temos controle de FPS; um multiplicador de `dt` daria
-  slow-motion de acessibilidade.
-- **Level select / unlock**: se houver flag de progresso em `localStorage`.
-Estes dependem de mapear variáveis específicas no `data.js` (trabalhoso, nomes
-ofuscados). **Plano:** começar por slow-mo (já temos a base de tempo) e um toggle
-de invencibilidade se a var de HP for localizável. Marcar claramente como
-"cheats" e desligados por padrão.
-- Esforço: alto (engenharia reversa do event sheet). Risco: médio.
+### 4. Useful cheats / hacks — PARTIALLY VIABLE
+C2's global variables are accessible via `c2runtime` in the console/JS. Low-risk
+candidates (dev/accessibility, opt-in and warned):
+- **Infinite life / no-damage**: locate the player HP variable in the event sheet
+  and force it every tick (periodic patch via `settings.js`).
+- **Slow-mo / turbo**: we already have FPS control; a `dt` multiplier would give
+  accessibility slow-motion.
+- **Level select / unlock**: if there's a progress flag in `localStorage`.
+These depend on mapping specific variables in `data.js` (laborious, obfuscated
+names). **Plan:** start with slow-mo (we already have the time base) and an
+invincibility toggle if the HP variable is locatable. Clearly mark them as
+"cheats" and off by default.
+- Effort: high (event-sheet reverse engineering). Risk: medium.
 
-Prioridade sugerida: **1 → 2 → 3 → 4** (do mais barato/seguro ao mais incerto).
+Suggested priority: **1 → 2 → 3 → 4** (from cheapest/safest to most uncertain).
 
 ## Legal
 
-O código deste port está licenciado sob a **Apache License 2.0** — veja
-[`LICENSE.md`](LICENSE.md) e [`NOTICE`](NOTICE).
+The port code is licensed under the **Apache License 2.0** — see
+[`LICENSE.md`](LICENSE.md) and [`NOTICE`](NOTICE).
 
-Este repositório contém **apenas** o código do port (WebView wrapper + overlays
-JS/HTML), sob o autor. **Nenhum asset do jogo é incluído ou redistribuído** —
-`c2runtime.js`, `data.js`, áudio, sprites, CSVs e ícones do jogo são propriedade
-da **JoyMasher / The Arcade Crew** e devem ser fornecidos por quem possui uma
-cópia legítima (`apply.sh`). O `.gitignore` bloqueia todo esse material. A licença
-Apache 2.0 cobre **somente** o código autoral do port, não o jogo (ver `NOTICE`).
-Projeto não-oficial, sem afiliação com a JoyMasher / The Arcade Crew.
+This repository contains **only** the port code (WebView wrapper + JS/HTML
+overlays), by the author. **No game asset is included or redistributed** —
+`c2runtime.js`, `data.js`, audio, sprites, CSVs and the game's icons are the
+property of **JoyMasher / The Arcade Crew / Asteristic Game Studio** and must be
+supplied by whoever owns a legitimate copy (`apply.sh`). The `.gitignore` blocks
+all of that material. The Apache 2.0 license covers **only** the author's port
+code, not the game (see `NOTICE`). Unofficial project, not affiliated with
+JoyMasher / The Arcade Crew / Asteristic Game Studio.
 
-### Ícone do app
+### App icon
 
-O ícone do launcher (`res/mipmap-*/ic_launcher.png`, veja `docs/icon.png`) é a
-arte custom do Moonrider, gerada nas 5 densidades a partir de um PNG 256×256. Para
-trocar,
-substitua os PNGs nas 5 densidades (mdpi 48px, hdpi 72, xhdpi 96, xxhdpi 144,
-xxxhdpi 192) e rebuilde. Se usar arte oficial do jogo, mantenha-a fora do git.
+The launcher icon (`res/mipmap-*/ic_launcher.png`, see `docs/icon.png`) is custom
+Moonrider art, generated at 5 densities from a 256×256 PNG. To change it, replace
+the PNGs at the 5 densities (mdpi 48px, hdpi 72, xhdpi 96, xxhdpi 144, xxxhdpi 192)
+and rebuild. If you use official game art, keep it out of git.

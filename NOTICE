@@ -26,8 +26,8 @@ the game "Vengeful Guardian: Moonrider" or any of its assets, including but not
 limited to: c2runtime.js, data.js, the localization CSV files, audio (media/),
 sprites/images, the intro video, and any game artwork or icons.
 
-  "Vengeful Guardian: Moonrider" is © JoyMasher / The Arcade Crew.
-  All rights reserved by their respective owners.
+  "Vengeful Guardian: Moonrider" is © JoyMasher / The Arcade Crew /
+  Asteristic Game Studio. All rights reserved by their respective owners.
 
 To build a working APK you must supply your own legitimate copy of the game's
 assets (see README.md and apply.sh). No commercial content is redistributed
