@@ -26,22 +26,39 @@ Studio**. There's also a Docker path if you'd rather not install a toolchain.
 
 ## Build
 
+The quickest path, from a fresh clone with a copy of the game:
+
 ```bash
-./apply.sh /path/to/game/assets --build   # assemble + build in one step
-# or, if assets/www/ is already populated:
-./build.sh                                 # -> build/Moonrider-debug.apk
+# 1. Extract the Construct 2 assets out of the game's Electron app.asar
+./extract-assets.sh /path/to/Vengeful.Guardian.Moonrider ./game-assets
+
+# 2. Build the APK — pick "docker" (isolated Debian container, nothing installed
+#    on your host) or "baremetal" (installs deps via apt and builds directly)
+./make-apk.sh --mode docker ./game-assets     # -> build/Moonrider-debug.apk
 ```
 
-`apply.sh` copies your game assets into `assets/www/`, applies the port's
-overrides, and (with `--build`) produces the APK. It also verifies the assets
-against `dist/assets.sha256` and warns on mismatch.
+`make-apk.sh` bootstraps the Android SDK for you the first time, so a fresh
+clone builds from zero with no manual SDK setup. Run it with no arguments for an
+interactive prompt.
 
-**First time?** You need to bootstrap the SDK into `.android-sdk/` and install a
-JDK first. Full instructions — host packages, SDK setup, the build pipeline,
-Docker, and troubleshooting — are in [`BUILD.md`](BUILD.md).
+Prefer to drive the pipeline by hand?
+
+```bash
+./apply.sh ./game-assets --build   # stage assets + build in one step
+# or, if assets/www/ is already populated:
+./build.sh                         # -> build/Moonrider-debug.apk
+```
+
+`apply.sh` copies your game assets into `assets/www/`, strips leftover Electron/
+Steam junk, applies the port's overrides, and (with `--build`) produces the APK.
+It also verifies the assets against `dist/assets.sha256` and warns on mismatch.
+
+**Full instructions** — asset extraction, host packages, SDK bootstrap, the
+build pipeline, Docker, and troubleshooting — are in [`BUILD.md`](BUILD.md).
 
 The "game assets folder" is the one holding `c2runtime.js`, `data.js`, `media/`,
-`images/`, the `.csv` files and `asteristic_logo.mp4`.
+`images/`, the `.csv` files and `asteristic_logo.mp4`. `extract-assets.sh`
+produces exactly this from the game's `app.asar`.
 
 > The intro video `asteristic_logo.mp4` is **mandatory** — without it the app
 > boots to a black, silent screen (the engine waits for it before the menu, and
