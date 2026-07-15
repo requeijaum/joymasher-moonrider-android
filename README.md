@@ -110,6 +110,38 @@ adb logcat -s MoonriderJS   # ver console JS do jogo
   `runtime.isNWjs` (false num WebView), então nunca executa.
 - APK ~127M por causa dos assets. Para reduzir: recomprimir `.ogg`/sprites.
 
+## Versões oficiais vs o build do RAR
+
+Verificação nas lojas oficiais (jul/2026) comparada ao build HTML5/NW.js do RAR:
+
+| | Steam | GOG | RAR (este port) |
+|---|---|---|---|
+| AppID / SKU | 1942010 | vengeful_guardian_moonrider | — |
+| Release | 12 Jan 2023 | 12 Jan 2023 | — |
+| Dev / Pub | JoyMasher / The Arcade Crew | idem | idem (package.json) |
+| Idiomas | **10** (EN, FR, IT, DE, ES, +5) | **10** ("English & 9 more") | **10** CSVs `mrlang*` ✓ |
+| Plataforma | Win nativo | Win nativo (DRM-free) | **HTML5/Construct 2** (NW.js) |
+| Achievements | 13 (Steam) | — (GOG Galaxy) | presentes no event sheet |
+| Versão | não exposta publicamente¹ | não exposta | `package.json` = 1.0.0² |
+
+¹ SteamDB (patchnotes/buildid) está bloqueado por bot-detection; não deu para
+  extrair o changelist exato sem login.
+² `1.0.0` é o valor genérico do wrapper NW.js, **não** reflete patch do jogo. Não
+  há número de versão do *jogo* embutido nos assets (Construct 2 não grava build
+  id no `c2runtime.js`/`data.js`). O `1.4.x` que aparece num grep é versão de
+  dependências npm (fs-extra etc.), não do jogo.
+
+**Conclusão da comparação:** o RAR é o **mesmo jogo** das lojas oficiais — mesma
+data, mesmos 10 idiomas, mesmo dev/pub — mas empacotado como **build web
+Construct 2 (NW.js/Electron)** em vez do executável Windows nativo das lojas. Por
+baixo, Steam/GOG rodam o mesmo `c2runtime.js` + `data.js`; a diferença é só o
+runtime que os embrulha (NW.js aqui vs. o wrapper nativo das lojas). É por isso
+que este port WebView funciona: ele descarta o wrapper NW.js/Steam e serve os
+mesmos assets Construct 2 no WebView do Android. **Não foi possível confirmar se
+o RAR corresponde ao patch *mais recente*** das lojas (sem acesso a buildid),
+mas o conteúdo (10 locales, event sheet com achievements/remap) é o do lançamento
+completo, não uma demo.
+
 ## Pendente (validação em device real)
 
 ✅ **Validado em device real** (POCO X3 Pro / vayu, LineageOS, Android 13):
